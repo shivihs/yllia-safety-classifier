@@ -1,0 +1,49 @@
+services:
+  gemma4-safety-api-offline-translate:
+    build:
+      context: .
+      args:
+        BASE_IMAGE: nvcr.io/nvidia/pytorch:25.12-py3
+    image: gemma4-safety-api-offline-translate:latest
+    container_name: gemma4-safety-api-offline-translate
+    ports:
+      - "11434:11434"
+    environment:
+      MODEL_NAME: gemma4-e4b-safety-reasoning
+      BASE_MODEL: google/gemma-4-E4B-it
+      ADAPTER_PATH: /models/final
+      CHAT_TEMPLATE: gemma-4
+      MAX_SEQ_LENGTH: "1024"
+      MAX_NEW_TOKENS: "128"
+      TEMPERATURE: "0.0"
+      TOP_P: "0.9"
+      # For 16 GB VRAM you will probably need LOAD_IN_4BIT=true for E4B.
+      LOAD_IN_4BIT: "true"
+      LOAD_IN_8BIT: "false"
+      LOAD_ON_STARTUP: "1"
+      UNSLOTH_DISABLE_STATISTICS: "1"
+      BNB_CUDA_VERSION: "130"
+      # Offline translation; no API keys required.
+      TRANSLATION_MODE: offline
+      TRANSLATION_DEVICE: cpu
+      EN_PL_MODEL: Helsinki-NLP/opus-mt-en-sla
+      PL_EN_MODEL: Helsinki-NLP/opus-mt-pl-en
+      TRANSLATION_MAX_NEW_TOKENS: "128"
+      # Set to 1 if you want translation models loaded at startup instead of lazily.
+      LOAD_TRANSLATION_ON_STARTUP: "0"
+    volumes:
+      # Adjust the left side to your actual final/ directory.
+      - ./final:/models/final:ro
+      - hf-cache:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # For Docker Compose versions that support the simpler GPU flag, uncomment:
+    # gpus: all
+
+volumes:
+  hf-cache:

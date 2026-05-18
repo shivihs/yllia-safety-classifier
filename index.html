@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yllia Safety Classifier — Polish Safety Adapter for Edge AI Systems</title>
+  <style>
+    :root {
+      --ok: #2f855a;
+      --offtop: #64748b;
+      --medical: #b7791f;
+      --crisis: #b91c1c;
+      --attack: #5b21b6;
+      --ink: #111827;
+      --text: #243044;
+      --muted: #64748b;
+      --soft: #f8fafc;
+      --bg: #f4f1eb;
+      --card: rgba(255,255,255,.88);
+      --border: rgba(17,24,39,.12);
+      --gold: #b08d57;
+      --navy: #172033;
+      --sage: #7f8f7a;
+      --shadow: 0 24px 70px rgba(17,24,39,.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 8% 6%, rgba(176,141,87,.18), transparent 28%),
+        radial-gradient(circle at 92% 18%, rgba(127,143,122,.18), transparent 30%),
+        linear-gradient(180deg, #fbfaf7 0%, var(--bg) 100%);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; }
+    .wrap { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+
+    /* HERO */
+    .hero {
+      min-height: 620px;
+      padding: 44px 0 74px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+      background:
+        linear-gradient(135deg, rgba(23,32,51,.96), rgba(31,42,68,.94)),
+        radial-gradient(circle at 72% 18%, rgba(176,141,87,.35), transparent 34%);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -12% -34% -12%;
+      height: 340px;
+      background: radial-gradient(ellipse at center, rgba(176,141,87,.20), transparent 66%);
+      pointer-events: none;
+    }
+    .topbar {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 88px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 750;
+      letter-spacing: -.02em;
+    }
+    .mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: var(--navy);
+      background: linear-gradient(135deg, #f6ead5, #b08d57);
+      box-shadow: 0 10px 30px rgba(176,141,87,.28);
+    }
+    .top-note {
+      color: rgba(255,255,255,.68);
+      font-size: .86rem;
+    }
+    .hero-grid {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(320px, .88fr);
+      gap: 56px;
+      align-items: center;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: #f6ead5;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: .78rem;
+      font-weight: 760;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+    h1 {
+      max-width: 760px;
+      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+      color: #fff;
+      font-size: clamp(3rem, 7vw, 5.8rem);
+      line-height: .95;
+      font-weight: 650;
+      letter-spacing: -.055em;
+      margin-bottom: 24px;
+    }
+    .hero-sub {
+      max-width: 700px;
+      font-size: clamp(1.04rem, 1.7vw, 1.24rem);
+      color: rgba(255,255,255,.76);
+      line-height: 1.75;
+      margin-bottom: 32px;
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.07);
+      color: rgba(255,255,255,.82);
+      padding: 10px 15px;
+      font-size: .85rem;
+      font-weight: 650;
+      backdrop-filter: blur(10px);
+    }
+    .hero-panel {
+      border: 1px solid rgba(255,255,255,.13);
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.07));
+      border-radius: 30px;
+      padding: 26px;
+      box-shadow: 0 28px 90px rgba(0,0,0,.22);
+      backdrop-filter: blur(20px);
+    }
+    .stat {
+      padding: 22px 0;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    .stat:last-child { border-bottom: 0; }
+    .stat strong {
+      display: block;
+      color: #f6ead5;
+      font-family: ui-serif, Georgia, serif;
+      font-size: 2.2rem;
+      line-height: 1;
+      font-weight: 650;
+      letter-spacing: -.03em;
+      margin-bottom: 7px;
+    }
+    .stat span { color: rgba(255,255,255,.70); font-size: .93rem; }
+
+    /* SHARED */
+    .section { padding: 76px 0 0; }
+    .section-head {
+      display: grid;
+      grid-template-columns: .8fr 1.2fr;
+      gap: 42px;
+      align-items: end;
+      margin-bottom: 26px;
+    }
+    .kicker {
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: .74rem;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+      color: var(--ink);
+      font-size: clamp(2rem, 3.5vw, 3.25rem);
+      line-height: 1.04;
+      font-weight: 650;
+      letter-spacing: -.035em;
+    }
+    .section-head p { color: var(--muted); max-width: 700px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    /* PURPOSE */
+    .purpose-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .purpose-card {
+      background: rgba(255,255,255,.72);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 24px;
+      min-height: 215px;
+    }
+    .purpose-card .num {
+      color: var(--gold);
+      font-family: ui-serif, Georgia, serif;
+      font-size: 1.65rem;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+    .purpose-card h3 { color: var(--ink); font-size: 1rem; margin-bottom: 9px; }
+    .purpose-card p { color: var(--muted); font-size: .91rem; line-height: 1.65; }
+
+    /* DATASET */
+    .data-band {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1px;
+      overflow: hidden;
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      background: var(--border);
+      box-shadow: var(--shadow);
+    }
+    .data-item {
+      background: rgba(255,255,255,.82);
+      padding: 30px;
+    }
+    .data-item strong {
+      display: block;
+      font-family: ui-serif, Georgia, serif;
+      font-size: 2.65rem;
+      color: var(--ink);
+      line-height: 1;
+      letter-spacing: -.04em;
+      margin-bottom: 10px;
+    }
+    .data-item span { color: var(--muted); font-size: .94rem; }
+
+    /* CATEGORIES */
+    .cat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .cat-card {
+      background: rgba(255,255,255,.76);
+      border: 1px solid var(--border);
+      border-top: 4px solid currentColor;
+      border-radius: 22px;
+      padding: 21px;
+      min-height: 235px;
+    }
+    .cat-card h3 { color: var(--ink); font-size: .94rem; letter-spacing: .02em; margin: 12px 0 8px; }
+    .cat-card p { color: var(--muted); font-size: .84rem; line-height: 1.55; }
+    .priority { color: currentColor; font-size: .7rem; font-weight: 820; letter-spacing: .1em; text-transform: uppercase; }
+    .c-attack { color: var(--attack); }
+    .c-crisis { color: var(--crisis); }
+    .c-medical { color: var(--medical); }
+    .c-ok { color: var(--ok); }
+    .c-offtop { color: var(--offtop); }
+
+    /* DEMO */
+    label { font-weight: 760; font-size: .88rem; color: var(--ink); display: block; margin-bottom: 8px; }
+    select, textarea {
+      width: 100%;
+      min-height: 132px;
+      resize: vertical;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 15px 16px;
+      transition: border-color .18s, box-shadow .18s;
+    }
+    select:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(176,141,87,.70);
+      box-shadow: 0 0 0 4px rgba(176,141,87,.14);
+    }
+    select {
+      max-width: 260px;
+      min-height: 48px;
+      cursor: pointer;
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+    .field-note {
+      color: var(--muted);
+      font-size: .86rem;
+      line-height: 1.55;
+      margin-top: 8px;
+    }
+    .translation-note {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(246,234,213,.42);
+      border: 1px solid rgba(176,141,87,.20);
+      color: #5f4b2e;
+      font-size: .9rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--navy), #2b3955);
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 22px;
+      font: 780 .94rem/1 inherit;
+      cursor: pointer;
+      box-shadow: 0 14px 34px rgba(23,32,51,.20);
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: .56; cursor: wait; transform: none; }
+    #result { display: none; margin-top: 16px; }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: rgba(248,250,252,.86);
+      border: 1px solid var(--border);
+      padding: 14px;
+      border-radius: 16px;
+      font-size: .88rem;
+    }
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+    .rbox h4, .route-box .lbl {
+      font-size: .72rem;
+      font-weight: 820;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .10em;
+      margin-bottom: 8px;
+    }
+    .route-box {
+      background: rgba(246,234,213,.52);
+      border: 1px solid rgba(176,141,87,.22);
+      border-radius: 18px;
+      padding: 16px;
+    }
+    .route-box p { color: #5f4b2e; font-size: .9rem; }
+
+    /* TEAM */
+    .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .team-card {
+      background: rgba(255,255,255,.76);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 25px;
+      min-height: 292px;
+    }
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, var(--navy), var(--gold));
+      font-weight: 820;
+      margin-bottom: 17px;
+      box-shadow: 0 16px 34px rgba(17,24,39,.16);
+    }
+    .team-card h3 { color: var(--ink); font-size: 1.05rem; margin-bottom: 3px; }
+    .role { color: var(--gold); font-size: .78rem; font-weight: 820; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 12px; }
+    .team-card p { color: var(--muted); font-size: .9rem; line-height: 1.62; }
+    .tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; }
+    .tag {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 10px;
+      color: var(--text);
+      background: rgba(248,250,252,.75);
+      font-size: .72rem;
+      font-weight: 720;
+    }
+
+    /* TECH */
+    .tech-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .tech-item { background: rgba(248,250,252,.86); border: 1px solid var(--border); border-radius: 18px; padding: 16px; }
+    .tech-item dt { color: var(--muted); text-transform: uppercase; letter-spacing: .10em; font-size: .68rem; font-weight: 820; margin-bottom: 5px; }
+    .tech-item dd { color: var(--ink); font-size: .92rem; font-weight: 760; }
+
+    .brand-tagline {
+      color: rgba(255,255,255,.52);
+      font-size: .68rem;
+      font-weight: 400;
+      letter-spacing: .01em;
+      margin-top: 2px;
+    }
+    .json-example-wrap {
+      margin-top: 18px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: rgba(255,255,255,.72);
+      overflow: hidden;
+    }
+    .json-example-wrap summary {
+      padding: 14px 20px;
+      font-size: .86rem;
+      font-weight: 760;
+      color: var(--ink);
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .json-example-wrap summary::before {
+      content: "›";
+      font-size: 1.1rem;
+      transition: transform .18s;
+      display: inline-block;
+      color: var(--gold);
+    }
+    .json-example-wrap[open] summary::before { transform: rotate(90deg); }
+    .json-example-wrap pre {
+      margin: 0;
+      border: 0;
+      border-top: 1px solid var(--border);
+      border-radius: 0;
+      background: #f8fafc;
+      font-size: .82rem;
+      padding: 18px 20px;
+    }
+
+    footer {
+      margin-top: 78px;
+      padding: 34px 20px;
+      color: rgba(255,255,255,.62);
+      background: var(--navy);
+      text-align: center;
+      font-size: .84rem;
+    }
+    footer strong, footer a { color: #fff; text-decoration: none; }
+
+    @media (max-width: 980px) {
+      .hero-grid, .section-head { grid-template-columns: 1fr; }
+      .topbar { margin-bottom: 56px; }
+      .purpose-grid, .cat-grid, .tech-grid { grid-template-columns: repeat(2, 1fr); }
+      .team-grid, .data-band { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .wrap { width: min(100% - 28px, 1120px); }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .hero { padding-top: 28px; min-height: auto; }
+      .hero-grid { gap: 34px; }
+      .purpose-grid, .cat-grid, .tech-grid, .result-grid, .field-row { grid-template-columns: 1fr; }
+      .hero-panel, .card { border-radius: 22px; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand">
+          <div class="mark">Y</div>
+          <div>
+            <span>Yllia Safety Classifier</span>
+            <div class="brand-tagline">A safety layer for local AI dialogue systems</div>
+          </div>
+        </div>
+        <div class="top-note">The Gemma 4 Good Hackathon</div>
+      </div>
+
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">Polish-native safety adapter</div>
+          <h1>Yllia Safety Classifier</h1>
+          <p class="hero-sub">
+            A content classification tool for AI systems running on-premise, on the edge, or in air-gapped environments. The project focuses on Polish-language mental-health safety data and provides an open-source adapter that can be embedded into local AI workflows.
+          </p>
+          <div class="hero-actions">
+            <span class="pill">Local / edge deployment</span>
+            <span class="pill">Polish-native dataset</span>
+            <span class="pill">Offline EN → PL translation bridge</span>
+            <span class="pill">LoRA adapter</span>
+            <span class="pill">Structured JSON output</span>
+          </div>
+        </div>
+
+        <aside class="hero-panel" aria-label="Project summary">
+          <div class="stat"><strong>1,369</strong><span>original Polish questions collected and human-labeled</span></div>
+          <div class="stat"><strong>+1</strong><span>one synthetic variant per original, training set only</span></div>
+          <div class="stat"><strong>5</strong><span>safety classes for routing, filtering and guardrail decisions</span></div>
+        </aside>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="kicker">Project purpose</div>
+          <h2>Open safety infrastructure for Polish AI systems.</h2>
+        </div>
+        <p>
+          Yllia Safety Classifier is not designed as a staffing automation tool. Its goal is to create a reusable, open-source Polish safety adapter that helps local AI systems recognize the type of user content before a downstream model, agent or RAG system decides how to respond.
+        </p>
+      </div>
+
+      <div class="purpose-grid">
+        <article class="purpose-card">
+          <div class="num">01</div>
+          <h3>Polish by design</h3>
+          <p>Built around original Polish examples rather than treating Polish as a translated afterthought. English demo inputs are translated locally before classification; the adapter itself remains Polish-native.</p>
+        </article>
+        <article class="purpose-card">
+          <div class="num">02</div>
+          <h3>On-prem and edge use</h3>
+          <p>Designed for systems where sensitive content should stay inside the organization’s infrastructure, including local, air-gapped and edge deployments.</p>
+        </article>
+        <article class="purpose-card">
+          <div class="num">03</div>
+          <h3>Reusable guardrail layer</h3>
+          <p>Provides a classification layer that can sit before a chatbot, agent, intake form, RAG system or other AI application.</p>
+        </article>
+        <article class="purpose-card">
+          <div class="num">04</div>
+          <h3>Open-source adapter</h3>
+          <p>The intended output is a fine-tuned adapter that can be reused, audited and improved by the community.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="kicker">Dataset</div>
+          <h2>A Polish dataset with preserved class balance.</h2>
+        </div>
+        <p>
+          The training data started from 1,369 original questions. Synthetic examples were added only to the training split: one generated variant per original. The augmentation process preserved the original class frequency distribution, so the expanded training set remains aligned with the observed label proportions.
+        </p>
+      </div>
+      <div class="data-band">
+        <div class="data-item"><strong>1,369</strong><span>original human-labeled Polish questions</span></div>
+        <div class="data-item"><strong>1</strong><span>synthetic variant per original, training set only</span></div>
+        <div class="data-item"><strong>same</strong><span>class-frequency distribution preserved after augmentation</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="kicker">Taxonomy</div>
+          <h2>Five labels for practical AI safety routing.</h2>
+        </div>
+        <p>
+          The classifier separates regular user input from off-topic content, medical-sensitive questions, crisis signals and adversarial or abusive messages. The labels are designed to support deterministic routing policies around an AI system.
+        </p>
+      </div>
+      <div class="cat-grid">
+        <article class="cat-card c-attack">
+          <div class="priority">Priority 1</div>
+          <h3>ATTACK</h3>
+          <p>Prompt injection, attempts to bypass rules, abusive language, spam, hostile documentation demands or attempts to break the intended procedure.</p>
+        </article>
+        <article class="cat-card c-crisis">
+          <div class="priority">Priority 2</div>
+          <h3>CRISIS</h3>
+          <p>Signals of self-harm, suicidal ideation, acute psychological crisis or other content requiring special crisis handling.</p>
+        </article>
+        <article class="cat-card c-medical">
+          <div class="priority">Priority 3</div>
+          <h3>MEDICAL_SENSITIVE</h3>
+          <p>Medication, diagnosis, side effects, treatment decisions or other clinically sensitive content that should not be answered as ordinary information.</p>
+        </article>
+        <article class="cat-card c-ok">
+          <div class="priority">Priority 4</div>
+          <h3>OK</h3>
+          <p>Standard relevant messages that can be safely passed to a normal AI workflow, such as logistics, intake or general service questions.</p>
+        </article>
+        <article class="cat-card c-offtop">
+          <div class="priority">Priority 5</div>
+          <h3>OFFTOPIC</h3>
+          <p>Messages unrelated to the intended mental-health or service context, including jokes, politics, weather or generic text generation requests.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="kicker">Live demo</div>
+          <h2>Try the local classification endpoint.</h2>
+        </div>
+        <p>
+          Enter a Polish message or let jurors type in English. English inputs are translated locally into Polish before classification, while the core adapter remains trained on Polish mental-health safety data. The demo expects a local backend endpoint at <code>/api/demo</code>.
+        </p>
+      </div>
+      <div class="card">
+        <div class="field-row">
+          <div>
+            <label for="language">Input language</label>
+            <select id="language">
+              <option value="auto">Auto-detect</option>
+              <option value="en">English</option>
+              <option value="pl">Polish</option>
+            </select>
+          </div>
+          <p class="field-note">
+            English is supported through a local translation layer. The classifier adapter itself is Polish-native and trained on Polish data.
+          </p>
+        </div>
+        <label for="text">User message</label>
+        <textarea id="text">Can I increase the dose of the medication on my own?</textarea>
+        <div class="translation-note">
+          Pipeline: original input → local EN/PL handling → Polish classifier adapter → structured safety label.
+        </div>
+        <button class="btn" id="btn" onclick="analyze()">Analyze message</button>
+      </div>
+      <div id="result" class="card"><div id="ri"></div></div>
+
+      <details class="json-example-wrap">
+        <summary>Example API response (JSON)</summary>
+        <pre>{
+  "original_text": "Can I increase the dose of the medication on my own?",
+  "input_language": "en",
+  "polish_text": "Czy mogę samodzielnie zwiększyć dawkę leku?",
+  "model_result": {
+    "kategoria": "MEDICAL_SENSITIVE",
+    "uzasadnienie": "Pytanie dotyczy samodzielnej modyfikacji dawkowania leku przepisanego przez lekarza. Tego rodzaju decyzje wymagają konsultacji medycznej i nie powinny być podejmowane bez nadzoru specjalisty."
+  },
+  "rationale_en": "The question concerns independently modifying the dosage of a prescribed medication. Such decisions require medical consultation and should not be made without specialist supervision.",
+  "route_en": "Route to medical protocol handler. Do not respond with general AI advice. Escalate to supervised medical information flow.",
+  "route_pl": "Przekieruj do procedury medycznej. Nie odpowiadaj ogólną odpowiedzią AI. Eskaluj do nadzorowanego przepływu informacji medycznej.",
+  "timing": {
+    "total_duration_ns": 1423887000
+  }
+}</pre>
+      </details>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="kicker">Team</div>
+          <h2>Clinical, psychological and AI expertise.</h2>
+        </div>
+        <p>
+          The project combines psychiatric domain knowledge, psychological labeling support and AI engineering work developed with contributors connected to AI4Business.
+        </p>
+      </div>
+      <div class="team-grid">
+        <article class="team-card">
+          <div class="avatar">DS</div>
+          <h3><a href="https://www.linkedin.com/in/damian-siwicki/" target="_blank" rel="noopener">Damian Siwicki</a></h3>
+          <div class="role">Project lead · Psychiatry · AI engineering</div>
+          <p>Psychiatrist and informatics engineer. Responsible for the system concept, safety taxonomy, model fine-tuning pipeline, adapter strategy and deployment-oriented architecture.</p>
+          <div class="tags"><span class="tag">Architecture</span><span class="tag">Fine-tuning</span><span class="tag">Safety taxonomy</span></div>
+        </article>
+        <article class="team-card">
+          <div class="avatar">KJ</div>
+          <h3>Katarzyna Jurczak</h3>
+          <div class="role">Domain expert · Psychological education</div>
+          <p>Contributor with ongoing psychological education. Supported dataset development, example review and human labeling from the perspective of psychological content understanding.</p>
+          <div class="tags"><span class="tag">Domain expertise</span><span class="tag">Human labeling</span><span class="tag">Dataset review</span></div>
+        </article>
+        <article class="team-card">
+          <div class="avatar">AR</div>
+          <h3>Agnieszka Ruszczak</h3>
+          <div class="role">Clinical expert · Psychotherapy</div>
+          <p>Psychotherapist with clinical experience. Supported clinical validation of the taxonomy and reviewed selected cases from a mental-health practice perspective.</p>
+          <div class="tags"><span class="tag">Clinical validation</span><span class="tag">Taxonomy review</span></div>
+        </article>
+        <article class="team-card">
+          <div class="avatar">A4B</div>
+          <h3>AI4Business contributors</h3>
+          <div class="role">3 students · 1 PhD candidate</div>
+          <p>Additional contributors from the AI4Business environment supported the broader data and AI workflow around the project.</p>
+          <div class="tags"><span class="tag">Data workflow</span><span class="tag">AI support</span><span class="tag">Collaboration</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="kicker">Technology</div>
+          <h2>Designed as a compact deployable safety layer.</h2>
+        </div>
+        <p>
+          The system is framed as a local adapter-based classifier: small enough to be embedded into edge workflows, structured enough to support predictable downstream routing, and auditable enough for open-source development.
+        </p>
+      </div>
+      <div class="card">
+        <dl class="tech-grid">
+          <div class="tech-item"><dt>Base model</dt><dd>Gemma 4 family</dd></div>
+          <div class="tech-item"><dt>Training method</dt><dd>LoRA / PEFT adapter</dd></div>
+          <div class="tech-item"><dt>Framework</dt><dd>Unsloth + Transformers</dd></div>
+          <div class="tech-item"><dt>Primary language</dt><dd>Polish-native adapter</dd></div>
+          <div class="tech-item"><dt>English input</dt><dd>Offline translation bridge</dd></div>
+          <div class="tech-item"><dt>Output format</dt><dd>Structured JSON</dd></div>
+          <div class="tech-item"><dt>Deployment target</dt><dd>Local / edge / on-prem</dd></div>
+          <div class="tech-item"><dt>Use case</dt><dd>AI guardrails</dd></div>
+          <div class="tech-item"><dt>Release goal</dt><dd>Open-source adapter</dd></div>
+        </dl>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p><strong>Yllia Safety Classifier</strong> · Polish-native safety adapter for local AI systems · 2026</p>
+    <p style="margin-top:6px; opacity:.72">Built for on-premise and edge AI workflows where sensitive content should remain under local control. English demo input is handled through local translation, not a separate bilingual adapter.</p>
+  </footer>
+
+  <script>
+    const COLORS = {
+      OK:               {bg:'#eef8f1', fg:'#2f855a', bd:'#bfe3ca'},
+      OFFTOPIC:         {bg:'#f1f5f9', fg:'#64748b', bd:'#cbd5e1'},
+      MEDICAL_SENSITIVE:{bg:'#fff8e6', fg:'#b7791f', bd:'#ead49a'},
+      CRISIS:           {bg:'#fff1f2', fg:'#b91c1c', bd:'#fecdd3'},
+      ATTACK:           {bg:'#f5f3ff', fg:'#5b21b6', bd:'#ddd6fe'},
+    };
+
+    function esc(s) {
+      return String(s).replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
+    }
+
+    async function analyze() {
+      const btn = document.getElementById('btn');
+      const wrap = document.getElementById('result');
+      const ri = document.getElementById('ri');
+      btn.disabled = true;
+      btn.textContent = 'Analyzing…';
+      wrap.style.display = 'block';
+      ri.innerHTML = '<p style="color:#64748b">The local pipeline is processing the message…</p>';
+
+      try {
+        const res = await fetch('/api/demo', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            text: document.getElementById('text').value,
+            language: document.getElementById('language').value,
+            include_raw: false
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const d = await res.json();
+        const m = d.model_result || {};
+        const cat = m.kategoria || m.category || 'UNKNOWN';
+        const c = COLORS[cat] || {bg:'#f8fafc', fg:'#334155', bd:'#e2e8f0'};
+        const ms = Math.round((d.timing?.total_duration_ns || 0) / 1_000_000);
+
+        ri.innerHTML = `
+          <div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span style="display:inline-flex;align-items:center;background:${c.bg};color:${c.fg};border:1.5px solid ${c.bd};border-radius:999px;padding:10px 18px;font-weight:820;font-size:1rem">${esc(cat)}</span>
+            <span style="color:#64748b;font-size:.84rem">${ms}&thinsp;ms</span>
+          </div>
+          <div class="result-grid">
+            <div class="rbox"><h4>Original input ${d.input_language ? '(' + esc(String(d.input_language).toUpperCase()) + ')' : ''}</h4><pre>${esc(d.original_text || document.getElementById('text').value || '')}</pre></div>
+            <div class="rbox"><h4>${d.polish_text && d.polish_text !== d.original_text ? 'Local translation → Polish' : 'Classifier input'}</h4><pre>${esc(d.polish_text || d.classifier_input || d.original_text || document.getElementById('text').value || '')}</pre></div>
+          </div>
+          <div style="margin-bottom:14px">
+            <div class="rbox"><h4>Model rationale (Polish)</h4><pre>${esc(m.uzasadnienie || m.rationale || '')}</pre></div>
+            ${d.rationale_en ? `<div class="rbox" style="margin-top:10px"><h4>Rationale — English translation</h4><pre>${esc(d.rationale_en)}</pre></div>` : ''}
+          </div>
+          <div class="route-box">
+            <div class="lbl">Suggested routing <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.78rem">(example based on model output)</span></div>
+            <p>${esc(d.route_en || d.route_pl || 'No route returned by the backend.')}</p>
+          </div>`;
+      } catch (err) {
+        ri.innerHTML = `<div style="color:#b91c1c"><strong>Error:</strong><pre>${esc(String(err))}</pre></div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Analyze message';
+      }
+    }
+  </script>
+</body>
+</html>
